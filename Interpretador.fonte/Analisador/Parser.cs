@@ -4,57 +4,65 @@ namespace Interpretador.fonte.Analisador;
 
 public class Parser
 {
-    private readonly List<Token> _tokens;
-    private int _posicaoAtual = 0;
+    private readonly List<Token> _tokens = new List<Token>();
+    private int _posicaoAtual;
+
 
     public Parser(List<Token> tokens)
     {
         _tokens = tokens;
+        _posicaoAtual = 0;
     }
 
-    public Instrucao Parsear()
+    public int ParseExpressao()
     {
-        if (_posicaoAtual >= _tokens.Count)
+        return ParseSomaSubtracao();
+    }
+
+    private int ParseSomaSubtracao()
+    {
+        var resultado = ParseMultiplicacaoDivisao();
+        
+        while (Match(Token.TipoToken.OperadorSoma) || Match(Token.TipoToken.OperadorSubtracao))
         {
-            throw new Exception("Fim inesperado do código");
+            Token operador = Previous();
+            int direita = ParseMultiplicacaoDivisao();
+            if (operador.Tipo == Token.TipoToken.OperadorSoma)
+                resultado += direita;
+            else if (operador.Tipo == Token.TipoToken.OperadorSubtracao)
+                resultado -= direita;
         }
+    }
+    
+    private int ParseNumero()
+    {
+        if (Match(Token.TipoToken.Numero))
+            return int.Parse(Previous().Lexema);
 
-        var token = _tokens[_posicaoAtual];
+        throw new Exception("Erro de sintaxe: esperava um número.");
+    }
 
-        Instrucao instrucao = null;
+    // Métodos auxiliares para manipulação dos tokens
+    private Token Peek()
+    {
+        return _tokens[_posicaoAtual];
+    }
 
-        switch (token.Tipo)
-        {
-            case Token.TipoToken.Identificador:
-                instrucao = AnalisarIdentificador();
-                break;
-            case Token.TipoToken.Numero:
-                instrucao = AnalisarNumero();
-                break;
-            case Token.TipoToken.OperadorDivisao:
-            case Token.TipoToken.OperadorSoma:
-            case Token.TipoToken.OperadorMultiplicacao:
-            case Token.TipoToken.OperadorSubtracao:
-                instrucao = AnalisarExpressaoAritmetica();
-                break;
-            default:
-                throw new Exception("Token Inválido: " + token.Tipo);
-                
-        }
+    private Token Previous()
+    {
+        return _tokens[_posicaoAtual - 1];
+    }
 
+    private bool Match(Token.TipoToken tipo)
+    {
+        if (IsAtEnd()) return false;
+        if (_tokens[_posicaoAtual].Tipo != tipo) return false;
         _posicaoAtual++;
-        
-        return instrucao;
+        return true;
     }
 
-    private Instrucao AnalisarIdentificador()
+    private bool IsAtEnd()
     {
-        var nome = _tokens[_posicaoAtual].Valor;
-    }private Instrucao AnalisarNumero()
-    {
-        
-    }private Instrucao AnalisarExpressaoAritmetica()
-    {
-        
+        return _posicaoAtual >= _tokens.Count;
     }
-}
+}  

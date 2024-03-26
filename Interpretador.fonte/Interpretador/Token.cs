@@ -9,7 +9,8 @@ public class Token
         OperadorSoma,
         OperadorSubtracao,
         OperadorMultiplicacao,
-        OperadorDivisao
+        OperadorDivisao,
+        OperadorAtribuicao
     }
 
     public TipoToken Tipo { get; set; }
