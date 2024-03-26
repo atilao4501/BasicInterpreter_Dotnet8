@@ -1,4 +1,5 @@
 using Interpretador.fonte.Interpretador;
+using System.Text.RegularExpressions;
 
 namespace Interpretador.fonte.Analisador;
 
@@ -19,50 +20,84 @@ public class Parser
         return ParseSomaSubtracao();
     }
 
-    private int ParseSomaSubtracao()
-    {
-        var resultado = ParseMultiplicacaoDivisao();
-        
-        while (Match(Token.TipoToken.OperadorSoma) || Match(Token.TipoToken.OperadorSubtracao))
-        {
-            Token operador = Previous();
-            int direita = ParseMultiplicacaoDivisao();
-            if (operador.Tipo == Token.TipoToken.OperadorSoma)
-                resultado += direita;
-            else if (operador.Tipo == Token.TipoToken.OperadorSubtracao)
-                resultado -= direita;
-        }
-    }
-    
-    private int ParseNumero()
-    {
-        if (Match(Token.TipoToken.Numero))
-            return int.Parse(Previous().Lexema);
-
-        throw new Exception("Erro de sintaxe: esperava um número.");
-    }
-
-    // Métodos auxiliares para manipulação dos tokens
-    private Token Peek()
+    private Token Atual()
     {
         return _tokens[_posicaoAtual];
     }
 
-    private Token Previous()
+    private Token Anterior()
     {
         return _tokens[_posicaoAtual - 1];
     }
 
-    private bool Match(Token.TipoToken tipo)
+    private int ParseSomaSubtracao()
     {
-        if (IsAtEnd()) return false;
+        var resultado = ParseMultiplicacaoDivisao();
+
+        while (Corresponde(Token.TipoToken.OperadorSoma) || Corresponde(Token.TipoToken.OperadorSubtracao))
+        {
+            Token operador = Anterior();
+            int direita = ParseMultiplicacaoDivisao();
+            if (operador.Tipo == Token.TipoToken.OperadorSoma) 
+            { 
+                resultado += direita; 
+            }
+
+            else if (operador.Tipo == Token.TipoToken.OperadorSubtracao) 
+            { 
+                resultado -= direita; 
+            }
+                
+        }
+
+        return resultado;
+    }
+
+    private int ParseMultiplicacaoDivisao()
+    {
+        int resultado = ParseNumero();
+
+        while (Corresponde(Token.TipoToken.OperadorMultiplicacao) || Corresponde(Token.TipoToken.OperadorDivisao))
+        {
+            Token operador = Anterior();
+            int direita = ParseNumero();
+
+            if (operador.Tipo == Token.TipoToken.OperadorMultiplicacao)
+            {
+                resultado *= direita;
+            }
+
+            if (operador.Tipo == Token.TipoToken.OperadorDivisao)
+            {
+                resultado /= direita;
+            }
+        }
+        return resultado;
+    }
+
+    private int ParseNumero()
+    {
+        if (Corresponde(Token.TipoToken.Numero))
+        {
+            return int.Parse(Anterior().Valor);
+        }
+
+        throw new Exception("Erro de sintaxe: esperava um número");
+    }
+
+
+    private bool Corresponde(Token.TipoToken tipo)
+    {
+        if (EstaNoFinal()) { return false; }
+
         if (_tokens[_posicaoAtual].Tipo != tipo) return false;
+
         _posicaoAtual++;
         return true;
     }
 
-    private bool IsAtEnd()
+    private bool EstaNoFinal()
     {
         return _posicaoAtual >= _tokens.Count;
     }
-}  
+}
