@@ -4,20 +4,21 @@ namespace Interpretador.fonte.Interpretador
 {
     public class Interpreta
     {
-        private List<Token> _tokens;
-        private Parser _parser;
+        private List<Instrucao> _instrucoes;
 
-        public Interpreta(List<Token> tokens)
+
+        public Interpreta(List<Instrucao> instrucaos)
         {
-            _tokens = tokens;
-            _parser = new Parser(_tokens);
+            _instrucoes = instrucaos;
         }
 
         public void Executar()
         {
 
-            int resultado = _parser.ParseExpressao();
-            Console.WriteLine(resultado);
+            foreach(var instrucao in _instrucoes)
+            {
+                instrucao.Executar();
+            }
 
         }
     }

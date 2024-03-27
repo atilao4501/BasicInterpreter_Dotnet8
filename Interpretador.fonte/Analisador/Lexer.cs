@@ -16,8 +16,8 @@ public class Lexer
 
     public List<Token> Analisar()
     {
-       
-        while(_posicaoAtual < _codigoFonte.Length)
+
+        while (_posicaoAtual < _codigoFonte.Length)
         {
             while (_posicaoAtual < _codigoFonte.Length && char.IsWhiteSpace(_codigoFonte[_posicaoAtual]))
             {
@@ -31,9 +31,9 @@ public class Lexer
 
             var token = ProximoToken();
 
-            if(token != null) 
+            if (token != null)
             {
-            _tokens.Add(token);
+                _tokens.Add(token);
             }
         }
 
@@ -48,7 +48,32 @@ public class Lexer
             _posicaoAtual++;
         }
 
-        if (Char.IsLetter(_codigoFonte[_posicaoAtual]))
+        if (_codigoFonte[_posicaoAtual] == 'P')
+        {
+            if (_codigoFonte.Length > _posicaoAtual + 5 && _codigoFonte.Substring(_posicaoAtual, 5) == "PRINT")
+            {
+                _posicaoAtual += 5;
+                return new Token(Token.TipoToken.PRINT, string.Empty);
+            }
+            else
+            {
+                throw new Exception("Erro Léxico na posição " + _posicaoAtual);
+            }
+        }
+        else if (_codigoFonte[_posicaoAtual] == 'L')
+        {
+
+            if (_codigoFonte.Length > _posicaoAtual + 5 && _codigoFonte.Substring(_posicaoAtual, 3) == "LET")
+            {
+                _posicaoAtual += 3;
+                return new Token(Token.TipoToken.LET, string.Empty);
+            }
+            else
+            {
+                throw new Exception("Erro Léxico na posição " + _posicaoAtual);
+            }
+        }
+        else if (Char.IsLetter(_codigoFonte[_posicaoAtual]))
         {
             return new Token(Token.TipoToken.Identificador, LerIdentificador());
         }
@@ -66,18 +91,33 @@ public class Lexer
             _posicaoAtual++;
             return new Token(Token.TipoToken.OperadorSubtracao, String.Empty);
         }
+        else if (_codigoFonte[_posicaoAtual] == '=')
+        {
+            _posicaoAtual++;
+            return new Token(Token.TipoToken.OperadorAtribuicao, String.Empty);
+        }
+        else if (_codigoFonte[_posicaoAtual] == '"')
+        {
+            _posicaoAtual++;
+            string valorString = LerString();
+            _posicaoAtual++;
+            return new Token(Token.TipoToken.String, valorString);
+        }
         else if (_codigoFonte[_posicaoAtual] == '*')
         {
             _posicaoAtual++;
-            return new Token(Token.TipoToken.OperadorMultiplicacao, String.Empty);  
+            return new Token(Token.TipoToken.OperadorMultiplicacao, String.Empty);
         }
         else if (_codigoFonte[_posicaoAtual] == '/')
         {
             _posicaoAtual++;
             return new Token(Token.TipoToken.OperadorDivisao, String.Empty);
         }
+
         else
         {
+            var teste = _codigoFonte[_posicaoAtual];
+
             throw new Exception("Erro Léxico na posição " + _posicaoAtual);
         }
 
@@ -87,7 +127,7 @@ public class Lexer
     {
         var numero = "";
 
-        
+
 
         while (char.IsDigit(_codigoFonte[_posicaoAtual]))
         {
@@ -102,13 +142,31 @@ public class Lexer
             }
         }
 
-        return numero;  
+        return numero;
+    }
+
+    private string LerString()
+    {
+        var valorString = "";
+
+        while (_codigoFonte[_posicaoAtual] != '"' && !EstaNoFinal())
+        {
+            valorString += _codigoFonte[_posicaoAtual];
+            _posicaoAtual++;
+        }
+
+        if (_codigoFonte[_posicaoAtual] != '"')
+        {
+            throw new Exception("Erro Léxico: string não fechada corretamente");
+        }
+
+        return valorString;
     }
 
     private string LerIdentificador()
     {
         var nome = "";
-        
+
         while (char.IsLetterOrDigit(_codigoFonte[_posicaoAtual]))
         {
             nome += _codigoFonte[_posicaoAtual];

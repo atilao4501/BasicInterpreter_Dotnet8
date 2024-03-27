@@ -7,13 +7,19 @@ public class Program
 {
     static void Main(string[] args)
     {
-        string codigoFonte = "10 * 7";
+        string codigoFonte = @"
+                LET x = 10
+                LET y = 5
+                PRINT ""A soma de x e y é: ""
+                PRINT x + y
+            ";
 
-        Lexer lexer = new Lexer(codigoFonte);
-        List<Token> tokens = lexer.Analisar();
+        Parser parser = new Parser(codigoFonte);
 
-        Interpreta interpretador = new Interpreta(tokens);
-        interpretador.Executar();
+        List<Instrucao> instrucao = parser.ParseCodigoBasic();
+
+        Console.ReadLine();
         
     }
+
 }

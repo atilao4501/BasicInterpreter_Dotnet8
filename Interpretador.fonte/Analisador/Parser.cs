@@ -5,29 +5,131 @@ namespace Interpretador.fonte.Analisador;
 
 public class Parser
 {
-    private readonly List<Token> _tokens = new List<Token>();
+    private readonly List<Variavel> _variaveis = new List<Variavel>();
+    private readonly List<Token> _tokens;
     private int _posicaoAtual;
+    private string _codigoFonte;
 
 
-    public Parser(List<Token> tokens)
-    {
-        _tokens = tokens;
+    public Parser(string codigoFonte)
+    {       
         _posicaoAtual = 0;
+        _codigoFonte = codigoFonte;
     }
 
-    public int ParseExpressao()
+    public List<Instrucao> ParseCodigoBasic()
     {
+        Lexer lexer = new Lexer(_codigoFonte);
+        List<Token> _tokens = lexer.Analisar();
+
+        List<Instrucao> instrucoes = new List<Instrucao>();
+
+        for (int i = 0; i < _tokens.Count; i++)
+        {
+            Token tokenAtual = _tokens[i];
+
+            if (tokenAtual.Tipo == Token.TipoToken.LET)
+            {
+                if (i + 1 < _tokens.Count && _tokens[i + 1].Tipo == Token.TipoToken.Identificador)
+                {
+                    string nomeVariavel = Identificador(_tokens[i + 1].Valor);
+                    i += 2;
+
+                    if (i < _tokens.Count && _tokens[i].Tipo == Token.TipoToken.OperadorAtribuicao)
+                    {
+                        i++;
+
+                        object valor = ObterValorAtribuido(_tokens[i]);
+
+                        Variavel variavel = new Variavel(_tokens[i].Tipo.ToString(),valor);
+                        Instrucao atribuicao = new Atribuicao(variavel, _variaveis);
+                        _variaveis.Add(variavel);
+                        instrucoes.Add(atribuicao);
+                    }
+                    else
+                    {
+                        throw new Exception("Erro de sintaxe: esperava um operador de atribuição");
+                    }
+
+                }
+                else
+                {
+                    throw new Exception("Erro de sintaxe: esperava um identificador após a instrução LET.");
+                }
+
+            }
+            else if (tokenAtual.Tipo == Token.TipoToken.PRINT)
+            {
+                if (i + 1 < _tokens.Count && _tokens[i + 1].Tipo == Token.TipoToken.String)
+                {
+                    string mensagem = _tokens[i + 1].Valor;
+                    i++;
+
+                    Instrucao print = new Print(mensagem);
+                    instrucoes.Add(print);
+                }
+                else if(i + 1 < _tokens.Count && _tokens[i + 1].Tipo == Token.TipoToken.Identificador)
+                {
+                    var variavel = ObterVariavel(_tokens[i + 1].Valor);
+
+                    i++;
+
+                    Instrucao print = new Print(variavel.Valor.ToString());
+                    instrucoes.Add(print);
+                }
+
+                else
+                {
+                    throw new Exception("Erro de sintaxe: esperava uma string após a instrução PRINT.");
+
+                }
+
+            }
+            else if (tokenAtual.Tipo == Token.TipoToken.OperadorSoma && tokenAtual.Tipo == Token.TipoToken.OperadorSubtracao && tokenAtual.Tipo == Token.TipoToken.OperadorMultiplicacao && tokenAtual.Tipo == Token.TipoToken.OperadorDivisao)
+            {
+                if (i - 1 >= 0 && i + 1 < _tokens.Count)
+                {
+                    int resultado = ParseExpressao(i - 1);
+                    i += 2;
+
+                    string nomeVariavel = _tokens[i - 2].Valor;
+
+                    Variavel variavel = new Variavel(nomeVariavel, resultado);
+
+                    //instrucoes.Add(new Atribuicao(variavel, resultado));
+                }
+            }          
+
+        }
+
+        PreencherVariaveis();
+
+        return instrucoes;
+
+    }
+
+    public int ParseExpressao(int indiceInicio)
+    {
+        _posicaoAtual = indiceInicio;
         return ParseSomaSubtracao();
     }
 
     private Token Atual()
     {
-        return _tokens[_posicaoAtual];
+        if(_posicaoAtual < _tokens.Count)
+        {
+            return _tokens[_posicaoAtual];
+        }
+        throw new IndexOutOfRangeException("Não há mais tokens disponíveis");
     }
 
     private Token Anterior()
     {
-        return _tokens[_posicaoAtual - 1];
+        if (_posicaoAtual - 1 >= 0)
+        {
+            return _tokens[_posicaoAtual - 1];
+        }
+        throw new IndexOutOfRangeException("Não há token anterior disponível.");
     }
 
     private int ParseSomaSubtracao()
@@ -38,16 +140,16 @@ public class Parser
         {
             Token operador = Anterior();
             int direita = ParseMultiplicacaoDivisao();
-            if (operador.Tipo == Token.TipoToken.OperadorSoma) 
-            { 
-                resultado += direita; 
+            if (operador.Tipo == Token.TipoToken.OperadorSoma)
+            {
+                resultado += direita;
             }
 
-            else if (operador.Tipo == Token.TipoToken.OperadorSubtracao) 
-            { 
-                resultado -= direita; 
+            else if (operador.Tipo == Token.TipoToken.OperadorSubtracao)
+            {
+                resultado -= direita;
             }
-                
+
         }
 
         return resultado;
@@ -88,16 +190,72 @@ public class Parser
 
     private bool Corresponde(Token.TipoToken tipo)
     {
-        if (EstaNoFinal()) { return false; }
-
-        if (_tokens[_posicaoAtual].Tipo != tipo) return false;
-
-        _posicaoAtual++;
-        return true;
+        if (!EstaNoFinal() && _tokens[_posicaoAtual].Tipo == tipo)
+        {
+            _posicaoAtual++;
+            return true;
+        }
+        return false;
     }
 
     private bool EstaNoFinal()
     {
         return _posicaoAtual >= _tokens.Count;
+    }
+
+    public string Identificador(string valorToken)
+    {
+        string identificadorSemEspacos = valorToken.Trim();
+
+        string identificadorEmMinusculas = identificadorSemEspacos.ToLower();
+
+        if (!Regex.IsMatch(identificadorEmMinusculas, @"^[a-zA-Z][a-zA-Z0-9_]*$"))
+        {
+            throw new Exception("Erro de sintaxe: identificador inválido");
+        }
+
+        return identificadorEmMinusculas;
+    }
+
+    public object ObterValorAtribuido(Token token)
+    {
+        if (token.Tipo == Token.TipoToken.Numero)
+        {
+            return int.Parse(token.Valor);
+        }
+
+        else if (token.Tipo == Token.TipoToken.Identificador)
+        {
+            return token.Valor;
+        }
+
+        else
+        {
+            throw new Exception("Tipo de token inválido para valor atribuiido");
+        }
+    }
+
+    public Variavel ObterVariavel(string nomeVariavel)
+    {
+        foreach (var variavel in _variaveis)
+        {
+            if (variavel.Nome == nomeVariavel)
+            {
+                return variavel;
+            }
+        }
+
+        throw new Exception("Variável não encontrada " + nomeVariavel);
+    }
+
+    public void PreencherVariaveis()
+    {
+        foreach(var token in _tokens)
+        {
+            if(token.Tipo == Token.TipoToken.LET)
+            {
+                _variaveis.Add(new Variavel(token.Valor,token.Valor));
+            }
+        }
     }
 }

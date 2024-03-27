@@ -11,7 +11,9 @@ public class Token
         OperadorMultiplicacao,
         OperadorDivisao,
         OperadorAtribuicao,
-        Print
+        PRINT,
+        LET,
+        String,
     }
 
     public TipoToken Tipo { get; set; }
