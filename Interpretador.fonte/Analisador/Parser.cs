@@ -15,12 +15,12 @@ public class Parser
     {       
         _posicaoAtual = 0;
         _codigoFonte = codigoFonte;
+        Lexer lexer = new Lexer(_codigoFonte);
+        _tokens = lexer.Analisar();
     }
 
     public List<Instrucao> ParseCodigoBasic()
     {
-        Lexer lexer = new Lexer(_codigoFonte);
-        List<Token> _tokens = lexer.Analisar();
 
         List<Instrucao> instrucoes = new List<Instrucao>();
 
@@ -41,9 +41,12 @@ public class Parser
 
                         object valor = ObterValorAtribuido(_tokens[i]);
 
-                        Variavel variavel = new Variavel(_tokens[i].Tipo.ToString(),valor);
-                        Instrucao atribuicao = new Atribuicao(variavel, _variaveis);
+                        Variavel variavel = new(nomeVariavel, valor);
+
+                        Atribuicao atribuicao = new(variavel, valor);
+
                         _variaveis.Add(variavel);
+
                         instrucoes.Add(atribuicao);
                     }
                     else
@@ -85,10 +88,12 @@ public class Parser
                 }
 
             }
-            else if (tokenAtual.Tipo == Token.TipoToken.OperadorSoma && tokenAtual.Tipo == Token.TipoToken.OperadorSubtracao && tokenAtual.Tipo == Token.TipoToken.OperadorMultiplicacao && tokenAtual.Tipo == Token.TipoToken.OperadorDivisao)
+            else if (tokenAtual.Tipo == Token.TipoToken.OperadorSoma || tokenAtual.Tipo == Token.TipoToken.OperadorSubtracao || tokenAtual.Tipo == Token.TipoToken.OperadorMultiplicacao || tokenAtual.Tipo == Token.TipoToken.OperadorDivisao)
             {
                 if (i - 1 >= 0 && i + 1 < _tokens.Count)
                 {
+
+                    var teste = _tokens[i - 1];
                     int resultado = ParseExpressao(i - 1);
                     i += 2;
 
@@ -101,8 +106,6 @@ public class Parser
             }          
 
         }
-
-        PreencherVariaveis();
 
         return instrucoes;
 
@@ -179,10 +182,18 @@ public class Parser
 
     private int ParseNumero()
     {
+
         if (Corresponde(Token.TipoToken.Numero))
         {
             return int.Parse(Anterior().Valor);
-        }
+        }if (Token.TipoToken.Identificador == _tokens[_posicaoAtual].Tipo)
+        {
+            var num = ObterVariavel(_tokens[_posicaoAtual].Valor);
+
+            //var numero = ObterValorAtribuido(_tokens[_posicaoAtual]);
+
+            return int.Parse(num.Valor.ToString());
+        }      
 
         throw new Exception("Erro de sintaxe: esperava um número");
     }
@@ -200,7 +211,7 @@ public class Parser
 
     private bool EstaNoFinal()
     {
-        return _posicaoAtual >= _tokens.Count;
+        return (_posicaoAtual >= _tokens.Count);
     }
 
     public string Identificador(string valorToken)

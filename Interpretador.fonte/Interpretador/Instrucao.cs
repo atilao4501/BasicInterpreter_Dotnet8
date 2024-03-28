@@ -11,17 +11,17 @@ namespace Interpretador.fonte.Interpretador
 
         private Variavel _variavel;
 
-        private List<Variavel> _variaveis;
+        private object _valor;
 
-        public Atribuicao(Variavel variavel, List<Variavel> variaveis)
+        public Atribuicao(Variavel variavel, object valor)
         {
             _variavel = variavel;
-            _variaveis = variaveis;
+            _valor = valor;
         }
 
         public override void Executar()
         {
-            _variaveis.Add(_variavel);
+            _variavel.Valor = _valor;
         }
     }
 

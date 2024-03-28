@@ -16,7 +16,11 @@ public class Program
 
         Parser parser = new Parser(codigoFonte);
 
-        List<Instrucao> instrucao = parser.ParseCodigoBasic();
+        List<Instrucao> instrucoes = parser.ParseCodigoBasic();
+
+        Interpreta interpretador = new Interpreta(instrucoes);
+
+        interpretador.Executar();
 
         Console.ReadLine();
         
