@@ -10,8 +10,8 @@ public class Program
         string codigoFonte = @"
                 LET x = 10
                 LET y = 5
-                PRINT ""A soma de x e y é: ""
-                PRINT x + y
+                PRINT ""A soma de x e y ï¿½: ""
+                PRINT x / y
             ";
 
         Parser parser = new Parser(codigoFonte);

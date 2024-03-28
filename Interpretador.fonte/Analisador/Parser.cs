@@ -61,8 +61,24 @@ public class Parser
                 }
 
             }
+            else if (tokenAtual.Tipo == Token.TipoToken.OperadorSoma || tokenAtual.Tipo == Token.TipoToken.OperadorSubtracao || tokenAtual.Tipo == Token.TipoToken.OperadorMultiplicacao || tokenAtual.Tipo == Token.TipoToken.OperadorDivisao)
+            {
+                if (i - 1 >= 0 && i + 1 < _tokens.Count)
+                {
+                    int resultado = ParseExpressao(i - 1);
+                    i += 2;
+
+                    string nomeVariavel = _tokens[i - 2].Valor;
+
+                    Variavel variavel = new Variavel(nomeVariavel, resultado);
+
+                    instrucoes.Add(new Atribuicao(variavel, resultado));
+                }
+            }    
+            
             else if (tokenAtual.Tipo == Token.TipoToken.PRINT)
             {
+                
                 if (i + 1 < _tokens.Count && _tokens[i + 1].Tipo == Token.TipoToken.String)
                 {
                     string mensagem = _tokens[i + 1].Valor;
@@ -74,11 +90,31 @@ public class Parser
                 else if(i + 1 < _tokens.Count && _tokens[i + 1].Tipo == Token.TipoToken.Identificador)
                 {
                     var variavel = ObterVariavel(_tokens[i + 1].Valor);
-
+                    
                     i++;
 
-                    Instrucao print = new Print(variavel.Valor.ToString());
-                    instrucoes.Add(print);
+                    if (_tokens[i + 1].Tipo == Token.TipoToken.OperadorSoma ||
+                        _tokens[i + 1].Tipo == Token.TipoToken.OperadorSubtracao ||
+                        _tokens[i + 1].Tipo == Token.TipoToken.OperadorMultiplicacao ||
+                        _tokens[i + 1].Tipo == Token.TipoToken.OperadorDivisao)
+                    {
+                        i++;
+                        if (i - 1 >= 0 && i + 1 < _tokens.Count)
+                        {
+                            int resultado = ParseExpressao(i - 1);
+                            i += 2;
+                            
+                            Instrucao print = new Print(resultado.ToString());
+                            instrucoes.Add(print);
+                        }
+                    }
+                    else
+                    {
+                        Instrucao print = new Print(variavel.Valor.ToString());
+                        instrucoes.Add(print);
+                    }
+                    
+                    
                 }
 
                 else
@@ -88,22 +124,7 @@ public class Parser
                 }
 
             }
-            else if (tokenAtual.Tipo == Token.TipoToken.OperadorSoma || tokenAtual.Tipo == Token.TipoToken.OperadorSubtracao || tokenAtual.Tipo == Token.TipoToken.OperadorMultiplicacao || tokenAtual.Tipo == Token.TipoToken.OperadorDivisao)
-            {
-                if (i - 1 >= 0 && i + 1 < _tokens.Count)
-                {
-
-                    var teste = _tokens[i - 1];
-                    int resultado = ParseExpressao(i - 1);
-                    i += 2;
-
-                    string nomeVariavel = _tokens[i - 2].Valor;
-
-                    Variavel variavel = new Variavel(nomeVariavel, resultado);
-
-                    //instrucoes.Add(new Atribuicao(variavel, resultado));
-                }
-            }          
+                  
 
         }
 
@@ -189,7 +210,7 @@ public class Parser
         }if (Token.TipoToken.Identificador == _tokens[_posicaoAtual].Tipo)
         {
             var num = ObterVariavel(_tokens[_posicaoAtual].Valor);
-
+            _posicaoAtual++;
             //var numero = ObterValorAtribuido(_tokens[_posicaoAtual]);
 
             return int.Parse(num.Valor.ToString());
