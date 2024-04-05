@@ -9,9 +9,9 @@ public class Program
     {
         string codigoFonte = @"
                 LET x = 10
-                LET y = 5
+                LET y = x + 2 * 3
                 PRINT ""A soma de x e y �: ""
-                PRINT x / y
+                PRINT x + y
             ";
 
         Parser parser = new Parser(codigoFonte);

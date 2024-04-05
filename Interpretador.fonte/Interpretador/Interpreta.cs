@@ -5,8 +5,7 @@ namespace Interpretador.fonte.Interpretador
     public class Interpreta
     {
         private List<Instrucao> _instrucoes;
-
-
+        
         public Interpreta(List<Instrucao> instrucaos)
         {
             _instrucoes = instrucaos;

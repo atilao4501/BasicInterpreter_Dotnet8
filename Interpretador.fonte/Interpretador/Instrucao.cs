@@ -3,6 +3,33 @@ namespace Interpretador.fonte.Interpretador
 
     public abstract class Instrucao
     {
+        private static List<Variavel> _variaveis = new List<Variavel>();
+
+        public static List<Variavel> Variaveis =>  _variaveis;
+        public void AdicionarVariavel(Variavel variavel)
+        {
+            _variaveis.Add(variavel);
+        }
+        
+        public static Variavel ObterVariavel(string nomeVariavel)
+        {
+        
+            foreach (var variavel in _variaveis)
+            {
+                if (variavel.Nome == nomeVariavel)
+                {
+                    return variavel;
+                }
+            }
+
+            throw new Exception("Variável não encontrada " + nomeVariavel);
+        }
+
+        public static List<Variavel> GetVariaveis()
+        {
+            return _variaveis;
+        }
+        
         public abstract void Executar();
     }
 

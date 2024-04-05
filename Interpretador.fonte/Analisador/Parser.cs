@@ -5,11 +5,9 @@ namespace Interpretador.fonte.Analisador;
 
 public class Parser
 {
-    private readonly List<Variavel> _variaveis = new List<Variavel>();
     private readonly List<Token> _tokens;
     private int _posicaoAtual;
     private string _codigoFonte;
-
 
     public Parser(string codigoFonte)
     {       
@@ -30,6 +28,8 @@ public class Parser
 
             if (tokenAtual.Tipo == Token.TipoToken.LET)
             {
+                object valor;
+                
                 if (i + 1 < _tokens.Count && _tokens[i + 1].Tipo == Token.TipoToken.Identificador)
                 {
                     string nomeVariavel = Identificador(_tokens[i + 1].Valor);
@@ -38,15 +38,39 @@ public class Parser
                     if (i < _tokens.Count && _tokens[i].Tipo == Token.TipoToken.OperadorAtribuicao)
                     {
                         i++;
-
-                        object valor = ObterValorAtribuido(_tokens[i]);
-
+                        
+                        if (_tokens[i + 1].Tipo == Token.TipoToken.OperadorSoma ||
+                            _tokens[i + 1].Tipo == Token.TipoToken.OperadorSubtracao ||
+                            _tokens[i + 1].Tipo == Token.TipoToken.OperadorMultiplicacao ||
+                            _tokens[i + 1].Tipo == Token.TipoToken.OperadorDivisao)
+                        {
+                            i++;
+                            if (i - 1 >= 0 && i + 1 < _tokens.Count)
+                            {
+                                valor = ParseExpressao(i - 1);
+                                i += 2;
+                                
+                            }
+                            else
+                            {
+                                valor = 0;
+                            }
+                        }
+                        else if (_tokens[i].Tipo == Token.TipoToken.Identificador)
+                        {
+                            valor = Instrucao.ObterVariavel(_tokens[i].Valor).Valor;
+                        }
+                        else
+                        {
+                            valor = ObterValorAtribuido(_tokens[i]);
+                        }
+                        
                         Variavel variavel = new(nomeVariavel, valor);
 
                         Atribuicao atribuicao = new(variavel, valor);
 
-                        _variaveis.Add(variavel);
-
+                        Instrucao.Variaveis.Add(variavel);
+                        
                         instrucoes.Add(atribuicao);
                     }
                     else
@@ -89,11 +113,16 @@ public class Parser
                 }
                 else if(i + 1 < _tokens.Count && _tokens[i + 1].Tipo == Token.TipoToken.Identificador)
                 {
-                    var variavel = ObterVariavel(_tokens[i + 1].Valor);
+                    var variavel = Instrucao.ObterVariavel(_tokens[i + 1].Valor);
                     
                     i++;
 
-                    if (_tokens[i + 1].Tipo == Token.TipoToken.OperadorSoma ||
+                    if (i + 1 >= _tokens.Count)
+                    {
+                        Instrucao print = new Print(variavel.Valor.ToString());
+                        instrucoes.Add(print);
+                    }
+                    else if (_tokens[i + 1].Tipo == Token.TipoToken.OperadorSoma ||
                         _tokens[i + 1].Tipo == Token.TipoToken.OperadorSubtracao ||
                         _tokens[i + 1].Tipo == Token.TipoToken.OperadorMultiplicacao ||
                         _tokens[i + 1].Tipo == Token.TipoToken.OperadorDivisao)
@@ -209,9 +238,8 @@ public class Parser
             return int.Parse(Anterior().Valor);
         }if (Token.TipoToken.Identificador == _tokens[_posicaoAtual].Tipo)
         {
-            var num = ObterVariavel(_tokens[_posicaoAtual].Valor);
+            var num = Instrucao.ObterVariavel(_tokens[_posicaoAtual].Valor);
             _posicaoAtual++;
-            //var numero = ObterValorAtribuido(_tokens[_posicaoAtual]);
 
             return int.Parse(num.Valor.ToString());
         }      
@@ -264,30 +292,6 @@ public class Parser
         else
         {
             throw new Exception("Tipo de token inválido para valor atribuiido");
-        }
-    }
-
-    public Variavel ObterVariavel(string nomeVariavel)
-    {
-        foreach (var variavel in _variaveis)
-        {
-            if (variavel.Nome == nomeVariavel)
-            {
-                return variavel;
-            }
-        }
-
-        throw new Exception("Variável não encontrada " + nomeVariavel);
-    }
-
-    public void PreencherVariaveis()
-    {
-        foreach(var token in _tokens)
-        {
-            if(token.Tipo == Token.TipoToken.LET)
-            {
-                _variaveis.Add(new Variavel(token.Valor,token.Valor));
-            }
         }
     }
 }
