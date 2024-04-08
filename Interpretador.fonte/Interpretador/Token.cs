@@ -14,6 +14,7 @@ public class Token
         PRINT,
         LET,
         String,
+        NumLinha
     }
 
     public TipoToken Tipo { get; set; }

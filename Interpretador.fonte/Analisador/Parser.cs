@@ -240,14 +240,13 @@ public class Parser
         {
             var num = Instrucao.ObterVariavel(_tokens[_posicaoAtual].Valor);
             _posicaoAtual++;
-
+            
+            
             return int.Parse(num.Valor.ToString());
         }      
 
         throw new Exception("Erro de sintaxe: esperava um número");
     }
-
-
     private bool Corresponde(Token.TipoToken tipo)
     {
         if (!EstaNoFinal() && _tokens[_posicaoAtual].Tipo == tipo)
@@ -284,7 +283,7 @@ public class Parser
             return int.Parse(token.Valor);
         }
 
-        else if (token.Tipo == Token.TipoToken.Identificador)
+        else if (token.Tipo == Token.TipoToken.Identificador || token.Tipo == Token.TipoToken.String)
         {
             return token.Valor;
         }

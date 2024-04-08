@@ -11,7 +11,7 @@ public class Program
                 LET x = 10
                 LET y = x + 2 * 3
                 PRINT ""A soma de x e y �: ""
-                PRINT x + y
+                PRINT y + x
             ";
 
         Parser parser = new Parser(codigoFonte);
